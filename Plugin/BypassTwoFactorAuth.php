@@ -1,30 +1,40 @@
 <?php
 declare(strict_types=1);
 
-namespace MarkShust\DisableTwoFactorAuth\Plugin;
+namespace Tudock\DisableTwoFactorAuth\Plugin;
 
+use Magento\Authorization\Model\UserContextInterface;
+use Magento\Backend\Model\Auth\Session as AdminSession;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\TwoFactorAuth\Model\TfaSession;
 
 /**
  * Class BypassTwoFactorAuth
- * @package MarkShust\DisableTwoFactorAuth\Plugin
+ * @package Tudock\DisableTwoFactorAuth\Plugin
  */
 class BypassTwoFactorAuth
 {
     const XML_PATH_CONFIG_ENABLE = 'twofactorauth/general/enable';
+    const XML_PATH_CONFIG_FORCE_DISABLE_FOR_USERS = 'twofactorauth/general/force_disable_for_users';
 
     /** @var ScopeConfigInterface */
     private $scopeConfig;
+
+    /**
+     * @var AdminSession
+     */
+    private $session;
 
     /**
      * BypassTwoFactorAuth constructor.
      * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        AdminSession $session
     ) {
         $this->scopeConfig = $scopeConfig;
+        $this->session = $session;
     }
 
     /**
@@ -44,8 +54,20 @@ class BypassTwoFactorAuth
         TfaSession $subject,
         $result
     ): bool {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_CONFIG_ENABLE)
-            ? $result
-            : true;
+        $flagEnabled = $this->scopeConfig->isSetFlag(self::XML_PATH_CONFIG_ENABLE);
+        if (!$flagEnabled || $this->adminCanBypass()) {
+            return true;
+        }
+        return $result;
+    }
+
+    private function adminCanBypass(): bool
+    {
+        $user = $this->session->getUser();
+        $configValue = $this->scopeConfig->getValue(self::XML_PATH_CONFIG_FORCE_DISABLE_FOR_USERS) ?? '';
+        $bypassUsers = explode(
+            ',', $configValue
+        );
+        return $user !== null && in_array($user->getUserName(), $bypassUsers);
     }
 }
