@@ -5,6 +5,7 @@
             <general>
                 <enable>1</enable>
                 <enable_for_api_token_generation>1</enable_for_api_token_generation>
+                <force_disable_for_users/>
             </general>
         </twofactorauth>
     </default>

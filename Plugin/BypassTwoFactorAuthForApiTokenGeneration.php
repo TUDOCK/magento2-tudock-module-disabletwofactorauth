@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MarkShust\DisableTwoFactorAuth\Plugin;
+namespace Tudock\DisableTwoFactorAuth\Plugin;
 
 use Closure;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -13,11 +13,12 @@ use Magento\TwoFactorAuth\Model\AdminAccessTokenService;
 
 /**
  * Class BypassWebApiTwoFactorAuth
- * @package MarkShust\DisableTwoFactorAuth\Plugin
+ * @package Tudock\DisableTwoFactorAuth\Plugin
  */
 class BypassTwoFactorAuthForApiTokenGeneration
 {
     const XML_PATH_CONFIG_ENABLE_FOR_API_TOKEN_GENERATION = 'twofactorauth/general/enable_for_api_token_generation';
+    const XML_PATH_CONFIG_FORCE_DISABLE_FOR_USERS = 'twofactorauth/general/force_disable_for_users';
 
     /** @var ScopeConfigInterface */
     private $scopeConfig;
@@ -59,8 +60,19 @@ class BypassTwoFactorAuthForApiTokenGeneration
         $username,
         $password
     ): string {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_CONFIG_ENABLE_FOR_API_TOKEN_GENERATION)
-            ? $proceed($username, $password)
-            : $this->adminTokenService->createAdminAccessToken($username, $password);
+        $flagEnabled = $this->scopeConfig->isSetFlag(self::XML_PATH_CONFIG_ENABLE_FOR_API_TOKEN_GENERATION);
+        if (!$flagEnabled || $this->adminCanBypass($username)) {
+            return $this->adminTokenService->createAdminAccessToken($username, $password);
+        }
+        return $proceed($username, $password);
+    }
+
+    private function adminCanBypass($user): bool
+    {
+        $configValue = $this->scopeConfig->getValue(self::XML_PATH_CONFIG_FORCE_DISABLE_FOR_USERS) ?? '';
+        $bypassUsers = explode(
+            ',', $configValue
+        );
+        return $user !== null && in_array($user->getUserName(), $bypassUsers);
     }
 }

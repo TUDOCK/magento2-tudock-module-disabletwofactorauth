@@ -3,6 +3,6 @@ use Magento\Framework\Component\ComponentRegistrar;
 
 ComponentRegistrar::register(
     ComponentRegistrar::MODULE,
-    'MarkShust_DisableTwoFactorAuth',
+    'Tudock_DisableTwoFactorAuth',
     __DIR__
 );

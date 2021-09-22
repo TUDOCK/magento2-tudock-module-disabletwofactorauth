@@ -12,6 +12,10 @@
                     <label>Enable 2FA for API Token Generation</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="force_disable_for_users" translate="label" type="text" sortOrder="250" showInDefault="1" canRestore="1">
+                    <label>Disable 2FA for these admin users always</label>
+                    <comment>User names, comma-seperated</comment>
+                </field>
                 <field id="force_providers">
                     <depends>
                         <field id="enable">1</field>
