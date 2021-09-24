@@ -73,6 +73,6 @@ class BypassTwoFactorAuthForApiTokenGeneration
         $bypassUsers = explode(
             ',', $configValue
         );
-        return $user !== null && in_array($user->getUserName(), $bypassUsers);
+        return $user !== null && in_array($user, $bypassUsers);
     }
 }
